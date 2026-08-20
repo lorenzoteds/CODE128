@@ -321,7 +321,7 @@
         <line x1="8" y1="23" x2="16" y2="23"></line>
       </svg>
     </button>
-    <div class="mic-label" id="micLabel">tocca e detta</div>
+    <div class="mic-label" id="micLabel">tieni premuto, oppure tocca per bloccare</div>
   </div>
 
   <div class="history">
@@ -406,7 +406,7 @@
 
   function convertiVoceInCodice(testo){
     testo = testo.toLowerCase().trim();
-    testo = testo.replace(/[.,!?\-]+/g, ' ').replace(/\s+/g, ' ').trim();
+    testo = testo.replace(/[.,!?\-\/\\]+/g, ' ').replace(/\s+/g, ' ').trim();
     const parole = testo.split(' ').filter(Boolean);
     let risultato = '';
     for(const parola of parole){
@@ -519,6 +519,11 @@
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   let recognition = null;
   let listening = false;
+  let locked = false;
+  let pressStart = 0;
+  let stoppedByPress = false;
+  const TAP_THRESHOLD_MS = 280;
+  const IDLE_LABEL = 'tieni premuto, oppure tocca per bloccare';
 
   if(SpeechRecognition){
     recognition = new SpeechRecognition();
@@ -534,14 +539,16 @@
     };
     recognition.onerror = (e)=>{
       listening = false;
+      locked = false;
       micBtn.classList.remove('listening');
-      micLabel.textContent = 'tocca e detta';
+      micLabel.textContent = IDLE_LABEL;
       setStatus('err', 'errore microfono: ' + e.error);
     };
     recognition.onend = ()=>{
       listening = false;
+      locked = false;
       micBtn.classList.remove('listening');
-      micLabel.textContent = 'tocca e detta';
+      micLabel.textContent = IDLE_LABEL;
     };
     recognition.onresult = (e)=>{
       const testo = e.results[0][0].transcript;
@@ -549,11 +556,50 @@
       generaBarcode(code, testo);
     };
 
-    micBtn.addEventListener('click', ()=>{
-      if(listening){ recognition.stop(); return; }
+    function startListening(){
       try{ recognition.start(); }
       catch(e){ /* già in ascolto */ }
+    }
+    function stopListening(){
+      try{ recognition.stop(); }catch(e){}
+    }
+
+    micBtn.addEventListener('pointerdown', (e)=>{
+      e.preventDefault();
+      if(listening){
+        // era bloccato in ascolto: un nuovo tocco lo ferma
+        stopListening();
+        stoppedByPress = true;
+        return;
+      }
+      stoppedByPress = false;
+      pressStart = Date.now();
+      startListening();
     });
+
+    micBtn.addEventListener('pointerup', (e)=>{
+      e.preventDefault();
+      if(stoppedByPress){ stoppedByPress = false; return; }
+      const duration = Date.now() - pressStart;
+      if(duration < TAP_THRESHOLD_MS){
+        // tocco rapido: resta in ascolto finché non tocchi di nuovo
+        locked = true;
+        micLabel.textContent = 'in ascolto… tocca per fermare';
+      } else {
+        // pressione prolungata: si ferma al rilascio
+        stopListening();
+      }
+    });
+
+    // se il dito esce dal bottone mentre è tenuto premuto, non blocchiamo l'ascolto
+    // (l'utente potrebbe muoversi leggermente); si ferma comunque su pointerup del documento
+    document.addEventListener('pointerup', (e)=>{
+      if(listening && !locked && e.target !== micBtn){
+        const duration = Date.now() - pressStart;
+        if(duration >= TAP_THRESHOLD_MS) stopListening();
+      }
+    });
+
   } else {
     micBtn.style.opacity = '0.35';
     micLabel.textContent = 'vocale non supportato';
