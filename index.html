@@ -7,7 +7,10 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>CODE-128 di Lorenzo</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Codice Barre</title>
 <style>
   :root{
     --bg:#0d0f10;
@@ -282,8 +285,8 @@
 
 <header>
   <div>
-    <div class="brand">Code128</div>
-    <div class="sub">generatore codici locale di Lorenzo &middot; offline</div>
+    <div class="brand">Codice Barre</div>
+    <div class="sub">generatore locale &middot; offline</div>
   </div>
   <div class="sub" id="clock"></div>
 </header>
@@ -293,7 +296,7 @@
   <div class="stage" id="stage">
     <div class="placeholder" id="placeholder">
       Detta o scrivi il codice.<br>
-      Genero subito il <b>Code128</b> da mostrare al lettore.<br>Due cose sono sicure:<br>Nessun dato lascia il telefono.<br>Toni farà straordinario.
+      Genero subito il <b>Code128</b> da mostrare al lettore. Nessun dato lascia il telefono.
     </div>
     <div id="resultBlock" style="display:none; width:100%;">
       <div id="barcodeWrap"><svg id="barcodeSvg"></svg></div>
