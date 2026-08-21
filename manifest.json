@@ -4,8 +4,8 @@
   "description": "Generatore locale di codici a barre per corrieri",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#0d0f10",
-  "theme_color": "#0d0f10",
+  "background_color": "#12508C",
+  "theme_color": "#12508C",
   "orientation": "portrait",
   "icons": [
     {
