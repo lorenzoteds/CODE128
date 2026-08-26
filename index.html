@@ -10,7 +10,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>CODE128</title>
+<title>Codice Barre</title>
 <style>
   :root{
     --bg:#0d0f10;
@@ -202,6 +202,7 @@
     justify-content:space-between;
     align-items:center;
   }
+  .history h2 span{ display:flex; gap:14px; }
   .history h2 button{
     background:none;
     border:none;
@@ -223,13 +224,64 @@
     font-family:var(--mono);
     font-size:14px;
   }
-  .hist-item .code{ color:var(--ink); }
-  .hist-item .time{ color:var(--ink-dim); font-size:11px; }
+  .hist-item .code{ color:var(--ink); flex:1; }
+  .hist-item .time{ color:var(--ink-dim); font-size:11px; margin-right:10px; }
+  .hist-item .print-icon{
+    background:none;
+    border:1px solid #2a2d2f;
+    border-radius:8px;
+    padding:5px 8px;
+    font-size:13px;
+    line-height:1;
+  }
   .hist-empty{
     color:var(--ink-dim);
     font-size:13px;
     font-family:var(--mono);
     padding:10px 2px;
+  }
+
+  .print-btn{
+    margin-top:14px;
+    width:100%;
+    background:var(--panel-2);
+    border:1px solid #2a2d2f;
+    color:var(--ink);
+    border-radius:12px;
+    padding:12px;
+    font-family:var(--sans);
+    font-weight:600;
+    font-size:14px;
+  }
+
+  #printArea{ display:none; }
+
+  @media print{
+    body *{ visibility:hidden; }
+    #printArea, #printArea *{ visibility:visible; }
+    #printArea{
+      display:block;
+      position:absolute;
+      top:0; left:0;
+      width:100%;
+      padding:24px;
+    }
+    .print-label{
+      break-inside:avoid;
+      page-break-inside:avoid;
+      border:1px dashed #999;
+      border-radius:6px;
+      padding:14px 10px 10px;
+      margin-bottom:14px;
+      text-align:center;
+    }
+    .print-label svg{ width:100%; max-width:360px; height:auto; }
+    .print-code-text{
+      font-family:'SF Mono', Menlo, Consolas, monospace;
+      font-size:15px;
+      margin-top:6px;
+      letter-spacing:0.03em;
+    }
   }
 
   .help-toggle{
@@ -285,8 +337,8 @@
 
 <header>
   <div>
-    <div class="brand">CODE128</div>
-    <div class="sub">generatore locale by Lorenzo &middot; offline</div>
+    <div class="brand">Codice Barre</div>
+    <div class="sub">generatore locale &middot; offline</div>
   </div>
   <div class="sub" id="clock"></div>
 </header>
@@ -302,6 +354,7 @@
       <div id="barcodeWrap"><svg id="barcodeSvg"></svg></div>
       <div class="code-readout" id="codeReadout" style="margin-top:14px;"></div>
       <div class="heard-text" id="heardText"></div>
+      <button id="printCurrentBtn" class="print-btn">🖨️ Stampa questo codice</button>
     </div>
   </div>
 
@@ -328,9 +381,16 @@
   </div>
 
   <div class="history">
-    <h2>Ultimi codici <button id="clearHist">svuota</button></h2>
+    <h2>Ultimi codici
+      <span>
+        <button id="printAllBtn">🖨️ stampa tutti</button>
+        <button id="clearHist">svuota</button>
+      </span>
+    </h2>
     <div id="histList"><div class="hist-empty">Nessun codice ancora generato.</div></div>
   </div>
+
+  <div id="printArea"></div>
 
   <div class="help-toggle">
     <button id="helpBtn">Come si detta un codice?</button>
@@ -456,10 +516,23 @@
       const d = new Date(h.ts);
       const time = d.toLocaleDateString('it-IT', {day:'2-digit', month:'2-digit'}) + ' ' +
                    d.toLocaleTimeString('it-IT', {hour:'2-digit', minute:'2-digit'});
-      return `<div class="hist-item" data-code="${h.code}"><span class="code">${h.code}</span><span class="time">${time}</span></div>`;
+      return `<div class="hist-item" data-code="${h.code}">
+        <span class="code">${h.code}</span>
+        <span class="time">${time}</span>
+        <button class="print-icon" data-print-code="${h.code}" aria-label="Stampa">🖨️</button>
+      </div>`;
     }).join('');
     el.querySelectorAll('.hist-item').forEach(item=>{
-      item.addEventListener('click', ()=> generaBarcode(item.dataset.code));
+      item.addEventListener('click', (e)=>{
+        if(e.target.closest('.print-icon')) return; // il tasto stampa non deve rigenerare
+        generaBarcode(item.dataset.code);
+      });
+    });
+    el.querySelectorAll('.print-icon').forEach(btn=>{
+      btn.addEventListener('click', (e)=>{
+        e.stopPropagation();
+        stampaCodici([btn.dataset.printCode]);
+      });
     });
   }
   document.getElementById('clearHist').addEventListener('click', ()=>{
@@ -467,7 +540,48 @@
     renderHistory();
   });
 
+  // ---------- Stampa ----------
+
+  function costruisciEtichetta(code){
+    const wrap = document.createElement('div');
+    wrap.className = 'print-label';
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    wrap.appendChild(svg);
+    const codeEl = document.createElement('div');
+    codeEl.className = 'print-code-text';
+    codeEl.textContent = code;
+    wrap.appendChild(codeEl);
+    JsBarcode(svg, code, {
+      format:'CODE128', width:2.2, height:80, margin:6, displayValue:false
+    });
+    return wrap;
+  }
+
+  function stampaCodici(codes){
+    codes = codes.filter(Boolean);
+    if(codes.length === 0) return;
+    const area = document.getElementById('printArea');
+    area.innerHTML = '';
+    codes.forEach(c => area.appendChild(costruisciEtichetta(c)));
+    window.print();
+  }
+
+  document.getElementById('printCurrentBtn').addEventListener('click', ()=>{
+    const code = document.getElementById('codeReadout').textContent;
+    stampaCodici([code]);
+  });
+
+  document.getElementById('printAllBtn').addEventListener('click', ()=>{
+    const codes = getHistory().map(h => h.code);
+    if(codes.length === 0){
+      setStatus('err', 'nessun codice da stampare');
+      return;
+    }
+    stampaCodici(codes);
+  });
+
   // ---------- Generazione barcode ----------
+
 
   function setStatus(kind, text){
     const dot = document.getElementById('statusDot');
