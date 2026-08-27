@@ -10,7 +10,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>Code128</title>
+<title>Codice Barre</title>
 <style>
   :root{
     --bg:#0d0f10;
@@ -256,31 +256,43 @@
 
   #printArea{ display:none; }
 
+  @page{
+    size:A4;
+    margin:10mm;
+  }
+
   @media print{
     body *{ visibility:hidden; }
     #printArea, #printArea *{ visibility:visible; }
     #printArea{
-      display:block;
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      grid-template-rows:repeat(8, 1fr);
+      gap:3mm 7mm;
       position:absolute;
       top:0; left:0;
       width:100%;
-      padding:24px;
+      height:277mm;
+      padding:0;
     }
     .print-label{
       break-inside:avoid;
       page-break-inside:avoid;
       border:1px dashed #999;
-      border-radius:6px;
-      padding:14px 10px 10px;
-      margin-bottom:14px;
-      text-align:center;
+      border-radius:2mm;
+      padding:2mm 2mm 1.5mm;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      overflow:hidden;
     }
-    .print-label svg{ width:100%; max-width:360px; height:auto; }
+    .print-label svg{ width:100%; height:auto; max-height:19mm; }
     .print-code-text{
       font-family:'SF Mono', Menlo, Consolas, monospace;
-      font-size:15px;
-      margin-top:6px;
-      letter-spacing:0.03em;
+      font-size:8.5pt;
+      margin-top:1.5mm;
+      letter-spacing:0.02em;
     }
   }
 
@@ -337,8 +349,8 @@
 
 <header>
   <div>
-    <div class="brand">Code128</div>
-    <div class="sub">generatore locale di Lorenzo &middot; offline</div>
+    <div class="brand">Codice Barre</div>
+    <div class="sub">generatore locale &middot; offline</div>
   </div>
   <div class="sub" id="clock"></div>
 </header>
@@ -502,7 +514,7 @@
   function saveToHistory(code){
     const hist = getHistory();
     hist.unshift({ code, ts: Date.now() });
-    localStorage.setItem(HIST_KEY, JSON.stringify(hist.slice(0, 15)));
+    localStorage.setItem(HIST_KEY, JSON.stringify(hist.slice(0, 16)));
     renderHistory();
   }
   function renderHistory(){
@@ -552,7 +564,7 @@
     codeEl.textContent = code;
     wrap.appendChild(codeEl);
     JsBarcode(svg, code, {
-      format:'CODE128', width:2.2, height:80, margin:6, displayValue:false
+      format:'CODE128', width:1.6, height:48, margin:4, displayValue:false
     });
     return wrap;
   }
