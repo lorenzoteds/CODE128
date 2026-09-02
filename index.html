@@ -10,7 +10,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>Code128Generator</title>
+<title>Codice Barre</title>
 <style>
   :root{
     --bg:#0d0f10;
@@ -349,8 +349,8 @@
 
 <header>
   <div>
-    <div class="brand">CODE128</div>
-    <div class="sub">generatore locale codice EAN128 &middot; by Lorenzo</div>
+    <div class="brand">Codice Barre</div>
+    <div class="sub">generatore locale &middot; offline</div>
   </div>
   <div class="sub" id="clock"></div>
 </header>
@@ -360,7 +360,7 @@
   <div class="stage" id="stage">
     <div class="placeholder" id="placeholder">
       Detta o scrivi il codice.<br>
-      Genero subito il <b>codice a barre</b> da mostrare al lettore.<br> Nessun dato lascia il telefono.
+      Genero subito il <b>Code128</b> da mostrare al lettore. Nessun dato lascia il telefono.
     </div>
     <div id="resultBlock" style="display:none; width:100%;">
       <div id="barcodeWrap"><svg id="barcodeSvg"></svg></div>
@@ -537,7 +537,7 @@
     el.querySelectorAll('.hist-item').forEach(item=>{
       item.addEventListener('click', (e)=>{
         if(e.target.closest('.print-icon')) return; // il tasto stampa non deve rigenerare
-        generaBarcode(item.dataset.code);
+        generaBarcode(item.dataset.code, null, true);
       });
     });
     el.querySelectorAll('.print-icon').forEach(btn=>{
@@ -601,7 +601,7 @@
     document.getElementById('statusText').textContent = text;
   }
 
-  function generaBarcode(code, heardText){
+  function generaBarcode(code, heardText, skipHistory){
     code = (code || '').trim().toUpperCase();
     if(!code){
       setStatus('err', 'codice vuoto');
@@ -622,7 +622,7 @@
       document.getElementById('codeReadout').textContent = code;
       document.getElementById('heardText').textContent = heardText ? `udito: "${heardText}"` : '';
       document.getElementById('textInput').value = '';
-      saveToHistory(code);
+      if(!skipHistory) saveToHistory(code);
       setStatus('ok', 'generato');
     }catch(e){
       setStatus('err', 'caratteri non validi per Code128');
