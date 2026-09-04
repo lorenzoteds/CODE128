@@ -1,6 +1,6 @@
 {
-  "name": "Codice Barre",
-  "short_name": "Codice Barre",
+  "name": "CODE128",
+  "short_name": "CODE128",
   "description": "Generatore locale di codici a barre per corrieri",
   "start_url": "./index.html",
   "display": "standalone",

@@ -10,7 +10,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>CoDe128</title>
+<title>CODE128</title>
 <style>
   :root{
     --bg:#0d0f10;
@@ -127,17 +127,16 @@
     display:none;
     max-width:520px;
     margin:0 auto;
-    padding:0 20px 4px;
+    padding:0 20px 16px;
     text-align:center;
   }
   .raw-data-box.show{ display:block; }
   .raw-data-content{
     font-family:var(--mono);
     font-size:14px;
-    color:var(--ink-dim);
-    line-height:1.5;
+    color:var(--stripe);
+    line-height:1.6;
     word-break:break-word;
-    opacity:0.75;
   }
 
   .input-row{
@@ -436,8 +435,8 @@
     padding:10px 20px calc(10px + env(safe-area-inset-bottom));
     text-align:center;
     font-family:var(--mono);
-    font-size:12px;
-    color:#f44336;
+    font-size:10px;
+    color:#4a4c4a;
     background:linear-gradient(to top, var(--bg) 60%, transparent);
   }
 </style>
@@ -448,8 +447,8 @@
 
 <header>
   <div>
-    <div class="brand">Codice Barre</div>
-    <div class="sub">generatore locale codice&middot; offline</div>
+    <div class="brand">CODE128</div>
+    <div class="sub">generatore locale &middot; offline</div>
   </div>
   <div class="sub" id="clock"></div>
 </header>
@@ -459,13 +458,13 @@
   <div class="stage" id="stage">
     <div class="placeholder" id="placeholder">
       Detta o scrivi il codice.<br>
-      Genero subito il <b>CodeEAN128</b> da mostrare al lettore. Nessun dato lascia il telefono.
+      Genero subito il <b>Code128</b> da mostrare al lettore. Nessun dato lascia il telefono.
     </div>
     <div id="resultBlock" style="display:none; width:100%;">
       <div id="barcodeWrap"><svg id="barcodeSvg"></svg></div>
       <div class="code-readout" id="codeReadout" style="margin-top:14px;"></div>
       <div class="heard-text" id="heardText"></div>
-      <button id="printCurrentBtn" class="print-btn">🖨️ Stampa codice</button>
+      <button id="printCurrentBtn" class="print-btn">🖨️ Stampa questo codice</button>
     </div>
   </div>
 
@@ -489,19 +488,19 @@
           <line x1="8" y1="23" x2="16" y2="23"></line>
         </svg>
       </button>
-      <div class="mic-label" id="micLabel">tieni premuto, o tocca per bloccare</div>
+      <div class="mic-label" id="micLabel">tieni premuto, oppure tocca per bloccare</div>
     </div>
 
     <div class="scan-zone">
-      <button id="scanBtn" aria-label="Leggi DataMatrix">📸</button>
-      <div class="mic-label">DataMatrix<br><span class="scan-warn">solo su Chrome</span></div>
+      <button id="scanBtn" aria-label="Leggi DataMatrix">📷</button>
+      <div class="mic-label">DataMatrix<br><span class="scan-warn">solo Chrome</span></div>
     </div>
   </div>
 
   <div class="scan-overlay" id="scanOverlay">
     <video id="scanVideo" playsinline autoplay muted></video>
     <div class="scan-frame"></div>
-    <div class="scan-msg" id="scanMsg">Inquadra il QRcode</div>
+    <div class="scan-msg" id="scanMsg">Inquadra il DataMatrix</div>
     <button id="scanCancelBtn" class="scan-cancel">✕ Annulla</button>
   </div>
 
@@ -549,7 +548,7 @@
   <span id="rawDataContent" class="raw-data-content"></span>
 </div>
 
-<footer>tutto resta sul telefono &middot; nessun server, creato da Lorenzo Tedesco</footer>
+<footer>tutto resta sul telefono &middot; nessun server &middot; Lorenzo Tedesco</footer>
 
 <script>
 /*! JsBarcode v3.12.3 | (c) Johan Lindell | MIT license */
