@@ -188,6 +188,70 @@
     letter-spacing:0.04em;
   }
 
+  .scan-zone{
+    margin-top:18px;
+    text-align:center;
+  }
+  #scanBtn{
+    background:var(--panel-2);
+    border:1px solid #2a2d2f;
+    color:var(--ink);
+    border-radius:12px;
+    padding:12px 18px;
+    font-family:var(--sans);
+    font-weight:600;
+    font-size:14px;
+    width:100%;
+  }
+
+  .scan-overlay{
+    display:none;
+    position:fixed;
+    inset:0;
+    z-index:999;
+    background:#000;
+  }
+  .scan-overlay.open{ display:block; }
+  .scan-overlay video{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+  }
+  .scan-frame{
+    position:absolute;
+    top:50%; left:50%;
+    transform:translate(-50%,-50%);
+    width:min(70vw, 320px);
+    height:min(70vw, 320px);
+    border:3px solid var(--stripe);
+    border-radius:16px;
+    box-shadow:0 0 0 2000px rgba(0,0,0,0.45);
+  }
+  .scan-msg{
+    position:absolute;
+    top:calc(env(safe-area-inset-top) + 24px);
+    left:0; right:0;
+    text-align:center;
+    color:#fff;
+    font-family:var(--mono);
+    font-size:14px;
+    padding:0 20px;
+  }
+  .scan-cancel{
+    position:absolute;
+    bottom:calc(env(safe-area-inset-bottom) + 30px);
+    left:50%;
+    transform:translateX(-50%);
+    background:rgba(255,255,255,0.12);
+    border:1px solid rgba(255,255,255,0.3);
+    color:#fff;
+    border-radius:24px;
+    padding:12px 26px;
+    font-family:var(--sans);
+    font-weight:600;
+    font-size:14px;
+  }
+
   .history{
     margin-top:30px;
   }
@@ -350,7 +414,7 @@
 <header>
   <div>
     <div class="brand">Codice Barre</div>
-    <div class="sub">generatore locale codice EAN128&middot; offline</div>
+    <div class="sub">generatore locale &middot; offline</div>
   </div>
   <div class="sub" id="clock"></div>
 </header>
@@ -360,7 +424,7 @@
   <div class="stage" id="stage">
     <div class="placeholder" id="placeholder">
       Detta o scrivi il codice.<br>
-      Genero subito il <b>Ccodice EAN128</b> da mostrare al lettore. Nessun dato lascia il telefono.
+      Genero subito il <b>Code128</b> da mostrare al lettore. Nessun dato lascia il telefono.
     </div>
     <div id="resultBlock" style="display:none; width:100%;">
       <div id="barcodeWrap"><svg id="barcodeSvg"></svg></div>
@@ -390,6 +454,17 @@
       </svg>
     </button>
     <div class="mic-label" id="micLabel">tieni premuto, oppure tocca per bloccare</div>
+  </div>
+
+  <div class="scan-zone">
+    <button id="scanBtn">📷 Leggi DataMatrix dal pacco</button>
+  </div>
+
+  <div class="scan-overlay" id="scanOverlay">
+    <video id="scanVideo" playsinline autoplay muted></video>
+    <div class="scan-frame"></div>
+    <div class="scan-msg" id="scanMsg">Inquadra il DataMatrix</div>
+    <button id="scanCancelBtn" class="scan-cancel">✕ Annulla</button>
   </div>
 
   <div class="history">
@@ -426,7 +501,8 @@
     &middot; singoli: <i>due sei zero</i><br>
     &middot; composti: <i>ventisei, sessanta, duecentosessanta</i><br><br>
     <b>Esempio</b> per F260D60237950:<br>
-    <i>"effe due sei zero di sessanta due tre sette nove cinque zero"</i>
+    <i>"effe due sei zero di sessanta due tre sette nove cinque zero"</i><br><br>
+    <b>📷 Leggi DataMatrix</b> &mdash; se sul pacco c'è anche un DataMatrix (oltre al Code128), inquadralo: leggo la parte in chiaro prima del carattere <code>|</code> e genero subito il barcode. Richiede Chrome su Android.
   </div>
 
 </main>
@@ -736,6 +812,83 @@
       setStatus('err', 'usa Chrome per il vocale');
     });
   }
+
+  // ---------- Scanner DataMatrix (fotocamera) ----------
+
+  const scanBtn = document.getElementById('scanBtn');
+  const scanOverlay = document.getElementById('scanOverlay');
+  const scanVideo = document.getElementById('scanVideo');
+  const scanMsg = document.getElementById('scanMsg');
+  const scanCancelBtn = document.getElementById('scanCancelBtn');
+
+  let scanStream = null;
+  let scanAttivo = false;
+  let scanDetector = null;
+
+  const SCAN_SUPPORTATO = ('BarcodeDetector' in window);
+
+  if(!SCAN_SUPPORTATO){
+    scanBtn.style.opacity = '0.4';
+  }
+
+  async function apriScanner(){
+    if(!SCAN_SUPPORTATO){
+      setStatus('err', 'lettore non supportato: usa Chrome su Android');
+      return;
+    }
+    try{
+      scanDetector = new BarcodeDetector({ formats: ['data_matrix'] });
+      scanStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment' }
+      });
+    }catch(e){
+      setStatus('err', 'permesso fotocamera negato');
+      return;
+    }
+    scanVideo.srcObject = scanStream;
+    scanOverlay.classList.add('open');
+    scanMsg.textContent = 'Inquadra il DataMatrix';
+    scanAttivo = true;
+    requestAnimationFrame(cicloScan);
+  }
+
+  function chiudiScanner(){
+    scanAttivo = false;
+    scanOverlay.classList.remove('open');
+    if(scanStream){
+      scanStream.getTracks().forEach(t => t.stop());
+      scanStream = null;
+    }
+  }
+
+  async function cicloScan(){
+    if(!scanAttivo) return;
+    try{
+      const risultati = await scanDetector.detect(scanVideo);
+      if(risultati && risultati.length > 0){
+        const raw = (risultati[0].rawValue || '').trim();
+        if(raw){
+          if(navigator.vibrate) navigator.vibrate(80);
+          chiudiScanner();
+          gestisciDataMatrix(raw);
+          return;
+        }
+      }
+    }catch(e){ /* frame non valido, si riprova al prossimo fotogramma */ }
+    if(scanAttivo) requestAnimationFrame(cicloScan);
+  }
+
+  function gestisciDataMatrix(raw){
+    const parte = raw.split('|')[0].trim();
+    if(!parte){
+      setStatus('err', 'nessun codice riconosciuto prima del separatore');
+      return;
+    }
+    generaBarcode(parte, `DataMatrix letto: ${raw.slice(0,50)}${raw.length>50?'…':''}`);
+  }
+
+  scanBtn.addEventListener('click', apriScanner);
+  scanCancelBtn.addEventListener('click', chiudiScanner);
 
   // ---------- Help toggle ----------
 
