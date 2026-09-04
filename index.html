@@ -125,33 +125,20 @@
 
   .raw-data-box{
     display:none;
-    margin-top:14px;
-    background:var(--panel);
-    border:1px dashed #5c4c0d;
-    border-radius:14px;
-    padding:14px 16px;
+    max-width:520px;
+    margin:0 auto;
+    padding:0 20px 4px;
+    text-align:center;
   }
   .raw-data-box.show{ display:block; }
-  .raw-data-title{
-    font-family:var(--mono);
-    font-size:10.5px;
-    letter-spacing:0.03em;
-    color:var(--stripe);
-    margin-bottom:8px;
-  }
-  .raw-data-title span{ color:var(--ink-dim); }
   .raw-data-content{
     font-family:var(--mono);
-    font-size:13px;
-    color:var(--ink);
-    line-height:1.7;
+    font-size:10px;
+    color:var(--ink-dim);
+    line-height:1.5;
     word-break:break-word;
+    opacity:0.75;
   }
-  .raw-data-content .campo{
-    padding:3px 0;
-    border-bottom:1px solid #232628;
-  }
-  .raw-data-content .campo:last-child{ border-bottom:none; }
 
   .input-row{
     display:flex;
@@ -487,11 +474,6 @@
     <span id="statusText">pronto</span>
   </div>
 
-  <div id="rawDataBox" class="raw-data-box">
-    <div class="raw-data-title">📋 Dati letti dal DataMatrix &middot; <span>non salvati, solo per questa scansione</span></div>
-    <div id="rawDataContent" class="raw-data-content"></div>
-  </div>
-
   <div class="input-row">
     <input id="textInput" type="text" placeholder="es. F211D82650217" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false">
     <button id="genBtn">Genera</button>
@@ -562,6 +544,10 @@
   </div>
 
 </main>
+
+<div id="rawDataBox" class="raw-data-box">
+  <span id="rawDataContent" class="raw-data-content"></span>
+</div>
 
 <footer>tutto resta sul telefono &middot; nessun server</footer>
 
@@ -948,10 +934,11 @@
     const parte = campi[0];
     generaBarcode(parte, `DataMatrix letto: ${raw.slice(0,50)}${raw.length>50?'…':''}`);
 
-    // mostra tutti i campi grezzi (nome, indirizzo, ecc.) solo per questa scansione
+    // mostra i campi grezzi (nome, indirizzo, ecc.) solo per questa scansione
     const rawBox = document.getElementById('rawDataBox');
     const content = document.getElementById('rawDataContent');
-    content.innerHTML = campi.map(c => `<div class="campo">${c.replace(/</g,'&lt;')}</div>`).join('');
+    const escapedCampi = campi.map(c => c.replace(/</g,'&lt;'));
+    content.innerHTML = escapedCampi.join(' &ndash; ');
     rawBox.classList.add('show');
   }
 
