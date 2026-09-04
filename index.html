@@ -458,13 +458,15 @@
   <div class="stage" id="stage">
     <div class="placeholder" id="placeholder">
       Detta o scrivi il codice.<br>
-      Genero subito il <b>Code128</b> da mostrare al lettore. Nessun dato lascia il telefono.
+      Puoi anche inquadrare il QRcode.<br>
+      Genero il <b>codice EAN128</b> da mostrare al lettore.
+    
     </div>
     <div id="resultBlock" style="display:none; width:100%;">
       <div id="barcodeWrap"><svg id="barcodeSvg"></svg></div>
       <div class="code-readout" id="codeReadout" style="margin-top:14px;"></div>
       <div class="heard-text" id="heardText"></div>
-      <button id="printCurrentBtn" class="print-btn">🖨️ Stampa questo codice</button>
+      <button id="printCurrentBtn" class="print-btn">🖨️ Stampa codice</button>
     </div>
   </div>
 
@@ -488,19 +490,19 @@
           <line x1="8" y1="23" x2="16" y2="23"></line>
         </svg>
       </button>
-      <div class="mic-label" id="micLabel">tieni premuto, oppure tocca per bloccare</div>
+      <div class="mic-label" id="micLabel">tieni premuto, o tocca per bloccare</div>
     </div>
 
     <div class="scan-zone">
       <button id="scanBtn" aria-label="Leggi DataMatrix">📷</button>
-      <div class="mic-label">DataMatrix<br><span class="scan-warn">solo Chrome</span></div>
+      <div class="mic-label">QRcode<br><span class="scan-warn">solo su Chrome</span></div>
     </div>
   </div>
 
   <div class="scan-overlay" id="scanOverlay">
     <video id="scanVideo" playsinline autoplay muted></video>
     <div class="scan-frame"></div>
-    <div class="scan-msg" id="scanMsg">Inquadra il DataMatrix</div>
+    <div class="scan-msg" id="scanMsg">Inquadra il QRcode</div>
     <button id="scanCancelBtn" class="scan-cancel">✕ Annulla</button>
   </div>
 
